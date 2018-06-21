@@ -3,29 +3,37 @@
 #------------------------------------------------------------------------------------------------------
 import unittest
 from conditions import preconditions, PreconditionError 
+from board import Board
 
 #------------------------------------------------------------------------------------------------------
 # IMPLEMENTATION
 #------------------------------------------------------------------------------------------------------
-class TicTacApplication:
-    """ A Tic Tac Toe Game """
+class GameCommand:
+    """ A Tic Tac Toe Game Action """
 
-    BOARD_SIZE = 3
-
-    def __init__(self):
-        self._boardGrid = []
-        numberOfBoardRowsCreated = 0
-        while (numberOfBoardRowsCreated < Board.BOARD_SIZE):
-            newColumn = self._create_column_of_empty_value()
-            numberOfBoardRowsCreated +=1
-            self._boardGrid += [newColumn]
-    #END
+    PRINT_COMMAND = 0
+    MOVE_COMMAND = 1
 
     @preconditions( (lambda self: True),
-                    (lambda playerNumber: ((isinstance(playerNumber, int))) and ((playerNumber == 1) or (playerNumber == 2))),
-                    (lambda boardXPosition: ((isinstance(boardXPosition, int))) and (boardXPosition >= 0) and (boardXPosition < Board.BOARD_SIZE)), 
-                    (lambda boardYPosition: ((isinstance(boardYPosition, int))) and (boardYPosition >= 0) and (boardYPosition < Board.BOARD_SIZE)) ) 
-    def placePlayerMarkerOnBoardAtPosition(self, playerNumber, boardXPosition, boardYPosition):
+                    (lambda commandType: (commandType == GameCommand.PRINT_COMMAND)) )
+    def _create_print_command(self, commandType):
+        self._commandType = commandType
+
+
+    @preconditions( (lambda self: True),
+                    (lambda commandType: (commandType == GameCommand.MOVE_COMMAND)),
+                    (lambda playerNumber:  playerNumber == 1 or playerNumber == 2),
+                    (lambda xBoardPosition: ((isinstance(xBoardPosition, int))) and (xBoardPosition >= 0) and (xBoardPosition < Board.BOARD_SIZE)), 
+                    (lambda yBoardPosition: ((isinstance(yBoardPosition, int))) and (yBoardPosition >= 0) and (yBoardPosition < Board.BOARD_SIZE)) )
+    def _create_move_command(self, commandType,playerNumber, xBoardPosition, yBoardPosition):
+        self._commandType = commandType
+        self._playerNumber = playerNumber
+        self._xBoardPosition = xBoardPosition
+        self._yBoardPosition = yBoardPosition
+    
+    @preconditions( (lambda self: True),
+                    (lambda *arguements: (len(arguements) == 1) or (len(arguements) == 4)) )
+    def __init__(self, *arguements):
         '''
         DESCRIPTION:
             Places a token at a given board position for a given player
@@ -41,15 +49,33 @@ class TicTacApplication:
             (invalid arguement)
                 a PreconditionError is thrown
         '''
-        self._boardGrid[boardXPosition][boardYPosition] = Board.PLAYER_TOKEN_VALUE[playerNumber - 1]
-    #END
+        if len(arguements) == 1:
+            self._create_print_command(*arguements)
+        if len(arguements) == 4:
+            self._create_move_command(*arguements)
 
+    def executeCommandOnBoard(self, board):
+        '''
+        DESCRIPTION:
+            Places a token at a given board position for a given player
 
+        PARAMETERS:
+            playerNumber: an integer which is 1 for 'player 1' and 2 for 'player 2'
+            boardXPosition: a board coordinate in the x direction between 0 and 2 as an integer
+            boardYPosition: a board coordinate in the y direction between 0 and 2 as an integer
 
+        RETURNS:
+            (valid arguement) 
+                None
+            (invalid arguement)
+                a PreconditionError is thrown
+        '''
+        if self._commandType == GameCommand.PRINT_COMMAND:
+            boardString = board.getBoardAsString()
+            print(boardString)
 
-
-
-
+        if self._commandType == GameCommand.MOVE_COMMAND:
+            board.placePlayerMarkerOnBoardAtPosition(self._playerNumber, self._xBoardPosition, self._yBoardPosition)
 
 #------------------------------------------------------------------------------------------------------
 # TESTING IMPLEMENTATION
@@ -59,25 +85,76 @@ class TestConstructor(unittest.TestCase):
     #------------------------------------------------------------------------------------------------------
     # TESTING SUPPORT CODE
     #------------------------------------------------------------------------------------------------------
-    _known_initial_board_value = [[0,0,0],[0,0,0],[0,0,0]]
-    _board = None
+    _player_numbers = [1,2]
+    _known_constructor_invalid_arguement_number_for_print_command = [(GameCommand.PRINT_COMMAND, 1),
+                                                                     (GameCommand.PRINT_COMMAND, 1, 1),
+                                                                     (GameCommand.PRINT_COMMAND, 1, 1, 1)]
+    _known_constructor_invalid_arguement_number_for_move_command =  [(GameCommand.MOVE_COMMAND),
+                                                                     (GameCommand.MOVE_COMMAND, 1),
+                                                                     (GameCommand.MOVE_COMMAND, 1, 1),
+                                                                     (GameCommand.MOVE_COMMAND, 1, 1, 1, 1) ]
+    _invalid_player_numbers = [0, 3, 4, 5, 6, 7, 8, 9]
+
+    _invalid_board_positions = [-1, 3, 4, 5, 6, 7, 8, 9]
 
     def setUp(self):
-        self._board = Board()
+        pass
 
     def tearDown(self):
-    	self._board = None
+    	pass
  
     #------------------------------------------------------------------------------------------------------
     # POSITIVE TESTING
     #------------------------------------------------------------------------------------------------------
-    def test_construction(self):
+    def test_construction_for_print_command(self):
+        printCommand = GameCommand(GameCommand.PRINT_COMMAND)
+        self.assertEqual(printCommand._commandType, GameCommand.PRINT_COMMAND)
+
+    def test_construction_for_move_command_for_correct_player_number(self):
         for boardXPosition in range(Board.BOARD_SIZE):
             for boardYPosition in range(Board.BOARD_SIZE):
-                self.assertEqual( self._board._boardGrid[boardXPosition][boardYPosition], 
-                                  self._known_initial_board_value[boardXPosition][boardYPosition])  
+                for playerNumber in self._player_numbers:
+                    moveCommand = GameCommand(GameCommand.MOVE_COMMAND, playerNumber, boardXPosition, boardYPosition)
+                    self.assertEqual(moveCommand._playerNumber, playerNumber)  
 
-class TestCreateColumnWithEmptyMarking(unittest.TestCase):
+    def test_construction_for_move_command_for_correct_x_position(self):
+        for boardXPosition in range(Board.BOARD_SIZE):
+            for boardYPosition in range(Board.BOARD_SIZE):
+                for playerNumber in self._player_numbers:
+                    moveCommand = GameCommand(GameCommand.MOVE_COMMAND, playerNumber, boardXPosition, boardYPosition)
+                    self.assertEqual( moveCommand._xBoardPosition, boardXPosition)  
+
+    def test_construction_for_move_command_for_correct_y_position(self):
+        for boardXPosition in range(Board.BOARD_SIZE):
+            for boardYPosition in range(Board.BOARD_SIZE):
+                for playerNumber in self._player_numbers:
+                    moveCommand = GameCommand(GameCommand.MOVE_COMMAND, playerNumber, boardXPosition, boardYPosition)
+                    self.assertEqual( moveCommand._yBoardPosition, boardYPosition)  
+
+    #------------------------------------------------------------------------------------------------------
+    # NEGATIVE TESTING
+    #------------------------------------------------------------------------------------------------------
+    def test_construction_for_invalid_numbers_of_arguements_for_print_command(self):
+        for invalid_constructor_arguements in self._known_constructor_invalid_arguement_number_for_print_command:
+            self.assertRaises(PreconditionError, GameCommand, (invalid_constructor_arguements))
+
+    def test_construction_for_invalid_numbers_of_arguements_for_move_command(self):
+        for invalid_constructor_arguements in self._known_constructor_invalid_arguement_number_for_move_command:
+            self.assertRaises(PreconditionError, GameCommand, (invalid_constructor_arguements))
+
+    def test_construction_for_invalid_player_number_for_move_command(self):
+        for player_number in self._invalid_player_numbers:
+            self.assertRaises(PreconditionError, GameCommand, (GameCommand.MOVE_COMMAND, player_number, 1, 1))
+
+    def test_construction_for_invalid_x_board_position_for_move_command(self):
+        for invalid_x_board_position in self._invalid_board_positions:
+            self.assertRaises(PreconditionError, GameCommand, (GameCommand.MOVE_COMMAND, 1, invalid_x_board_position, 1))
+
+    def test_construction_for_invalid_y_board_position_for_move_command(self):
+        for invalid_y_board_position in self._invalid_board_positions:
+            self.assertRaises(PreconditionError, GameCommand, (GameCommand.MOVE_COMMAND, 1, 1, invalid_y_board_position))
+"""
+class TestExecuteCommandOnBoard(unittest.TestCase):
  
     #------------------------------------------------------------------------------------------------------
     # TESTING SUPPORT CODE
@@ -336,7 +413,7 @@ class TestGetBoardString(unittest.TestCase):
         self._board.placePlayerMarkerOnBoardAtPosition(2, 2, 1)
         boardString = self._board.getBoardAsString()
         self.assertEqual(boardString, self._known_random_board_two_board_string)
-
+"""
 #------------------------------------------------------------------------------------------------------
 # TESTING DRIVER
 #------------------------------------------------------------------------------------------------------
