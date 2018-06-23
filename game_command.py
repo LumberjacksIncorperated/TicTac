@@ -19,10 +19,17 @@ class GameCommand:
 
     PRINT_COMMAND = 0
     MOVE_COMMAND = 1
+    NOTHING_COMMAND = 2
 
     @preconditions( (lambda self: True),
                     (lambda commandType: (commandType == GameCommand.PRINT_COMMAND)) )
     def _create_print_command(self, commandType):
+        self._commandType = commandType
+    #END
+
+    @preconditions( (lambda self: True),
+                    (lambda commandType: (commandType == GameCommand.NOTHING_COMMAND)) )
+    def _create_nothing_command(self, commandType):
         self._commandType = commandType
     #END
 
@@ -47,7 +54,8 @@ class GameCommand:
 
         PARAMETERS:
             arguements(0): GameCommand.PRINT_COMMAND
-
+            or
+            arguements(0): GameCommand.NOTHING_COMMAND            
             or
             arguements(0): GameCommand.PRINT_COMMAND
             arguements(1): an integer which is 1 for 'player 1' and 2 for 'player 2'
@@ -60,10 +68,19 @@ class GameCommand:
             (invalid arguement)
                 a PreconditionError is thrown
         '''
-        if len(arguements) == 1:
+        if len(arguements) == 1 and (arguements[0] == GameCommand.PRINT_COMMAND):
             self._create_print_command(*arguements)
-        if len(arguements) == 4:
+            return
+            
+        if len(arguements) == 1 and (arguements[0] == GameCommand.NOTHING_COMMAND):
+            self._create_nothing_command(*arguements)
+            return
+
+        if len(arguements) == 4 and (arguements[0] == GameCommand.MOVE_COMMAND):
             self._create_move_command(*arguements)
+            return
+
+        raise PreconditionError
     #END
 
     def executeCommandOnBoard(self, board):
@@ -83,6 +100,9 @@ class GameCommand:
 
         if self._commandType == GameCommand.MOVE_COMMAND:
             board.placePlayerMarkerOnBoardAtPosition(self._playerNumber, self._xBoardPosition, self._yBoardPosition)
+
+        if self._commandType == GameCommand.NOTHING_COMMAND:
+            pass
     #END
 
 #------------------------------------------------------------------------------------------------------
@@ -94,6 +114,10 @@ class TestConstructor(unittest.TestCase):
     # TESTING SUPPORT CODE
     #------------------------------------------------------------------------------------------------------
     _player_numbers = [1,2]
+
+    _known_constructor_invalid_arguement_number_for_nothing_command = [(GameCommand.NOTHING_COMMAND, 1),
+                                                                     (GameCommand.NOTHING_COMMAND, 1, 1),
+                                                                     (GameCommand.NOTHING_COMMAND, 1, 1, 1)] 
 
     _known_constructor_invalid_arguement_number_for_print_command = [(GameCommand.PRINT_COMMAND, 1),
                                                                      (GameCommand.PRINT_COMMAND, 1, 1),
@@ -117,6 +141,10 @@ class TestConstructor(unittest.TestCase):
     #------------------------------------------------------------------------------------------------------
     # POSITIVE TESTING
     #------------------------------------------------------------------------------------------------------
+    def test_construction_for_nothing_command(self):
+        printCommand = GameCommand(GameCommand.NOTHING_COMMAND)
+        self.assertEqual(printCommand._commandType, GameCommand.NOTHING_COMMAND)
+
     def test_construction_for_print_command(self):
         printCommand = GameCommand(GameCommand.PRINT_COMMAND)
         self.assertEqual(printCommand._commandType, GameCommand.PRINT_COMMAND)
@@ -145,6 +173,10 @@ class TestConstructor(unittest.TestCase):
     #------------------------------------------------------------------------------------------------------
     # NEGATIVE TESTING
     #------------------------------------------------------------------------------------------------------
+    def test_construction_for_invalid_numbers_of_arguements_for_nothing_command(self):
+        for invalid_constructor_arguements in self._known_constructor_invalid_arguement_number_for_nothing_command:
+            self.assertRaises(PreconditionError, GameCommand, (invalid_constructor_arguements))
+
     def test_construction_for_invalid_numbers_of_arguements_for_print_command(self):
         for invalid_constructor_arguements in self._known_constructor_invalid_arguement_number_for_print_command:
             self.assertRaises(PreconditionError, GameCommand, (invalid_constructor_arguements))

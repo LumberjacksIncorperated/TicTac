@@ -36,7 +36,11 @@ class Panel:
         playerNumber = int(raw_input("First, enter player number: "))
         xBoardPosition = int(raw_input("Next, enter x-axis board position (0 -> 2): "))
         yBoardPosition = int(raw_input("Next, enter y-axis board position (0 -> 2): "))
-        userCommand = GameCommand(GameCommand.MOVE_COMMAND, playerNumber, xBoardPosition, yBoardPosition)
+        try:
+            userCommand = GameCommand(GameCommand.MOVE_COMMAND, playerNumber, xBoardPosition, yBoardPosition)
+        except PreconditionError:
+            print("Invalid Move!")
+            return GameCommand(GameCommand.NOTHING_COMMAND)
         return userCommand
     #END
 
