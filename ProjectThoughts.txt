@@ -94,7 +94,7 @@ Classes
 		is an attempt to reduce the interface depedencies within our system, which may halt changes to our system
 		in the future that we have not anticipated now.
 
-		
+
 
 
 
@@ -109,3 +109,22 @@ Classes
 
 		This class could inherit as a 'source', so that this source could be switched out with something that wraps a
 		socket when we perform that extension ('an example of programming for the future').
+
+
+
+------------
+Unit Testing
+------------
+
+	1. Interactive Testing
+
+	Should we have a flag at the very begining before a main is called that sets a global level? yes.
+
+
+
+
+
+
+
+
+

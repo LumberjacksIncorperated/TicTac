@@ -2,7 +2,13 @@
 # IMPORTS
 #------------------------------------------------------------------------------------------------------
 import unittest
-from conditions import preconditions, PreconditionError 
+from conditions import preconditions, PreconditionError
+import sys
+
+#------------------------------------------------------------------------------------------------------
+# TEST FLAG
+#------------------------------------------------------------------------------------------------------
+testFlag = None
 
 #------------------------------------------------------------------------------------------------------
 # IMPLEMENTATION
@@ -229,7 +235,7 @@ class TestPlacePlayerMarkerOnBoardAtPosition(unittest.TestCase):
                     self._board = Board()
                     self.assertRaises( PreconditionError, self._board.placePlayerMarkerOnBoardAtPosition, (1, invalidPosition, boardYPosition) )
                     self._board = None 
-                for player in range(3,100):
+                for invalidPosition in range(3,100):
                     self._board = Board()
                     self.assertRaises( PreconditionError, self._board.placePlayerMarkerOnBoardAtPosition, (1, boardXPosition, invalidPosition) )
                     self._board = None 
@@ -397,4 +403,22 @@ class TestGetBoardString(unittest.TestCase):
 # TESTING DRIVER
 #------------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
+    
+    # Check corret length of command line arguement string
+    if not (len(sys.argv) == 2):
+        print "Test Bench: Not Correct Number Testing Arguements\n"
+        sys.exit(0)
+
+    # Check valid command line arguements entered
+    if ((not (sys.argv[1] == '-interactive')) and (not (sys.argv[1] == '-compilation'))):
+        print "Test Bench: Not Correct Testing Arguements\n"
+        sys.exit(0)
+
+    # Set the testing flag for the testing level for the module
+    testFlag = ((sys.argv[1]) + '.')[:-1]
+    del sys.argv[1]
+
+    # Run test harness
     unittest.main()
+
+#END
