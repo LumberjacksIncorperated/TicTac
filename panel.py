@@ -114,7 +114,7 @@ class TestGetCommandFromUser(unittest.TestCase):
 
     def test_get_user_command_y_position(self):
         if not (testFlag == "-interactive"):
-            print("\n<Test function 'ttest_get_user_command' is not run on this testing mode.>")
+            print("\n<Test function 'test_get_user_command' is not run on this testing mode.>")
             return
 
         for boardXPosition in [0,1,2]:
