@@ -416,7 +416,12 @@ if __name__ == '__main__':
 
     # Set the testing flag for the testing level for the module
     testFlag = ((sys.argv[1]) + '.')[:-1]
-    del sys.argv[1]
+
+    # Add verbose output for compilation testing
+    if testFlag == "-compilation":
+        sys.argv[1] = "-v"
+    else:
+        del sys.argv[1]
     
     # Run test harness
     unittest.main()
